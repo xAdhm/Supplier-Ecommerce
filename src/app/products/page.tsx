@@ -4,6 +4,12 @@ import Header from '@/components/layout/Header';
 import connectDB from '@/lib/mongodb';
 import Product from '@/lib/models/Product';
 
+// Fetches live data from MongoDB, so this page must render per-request
+// rather than being statically prerendered at build time. Without this,
+// a build-time DB hiccup (e.g. DNS SRV lookup failure) bakes an empty
+// "No Products Available" page into the static output.
+export const dynamic = 'force-dynamic';
+
 interface Product {
   _id: string;
   name: string;
@@ -20,12 +26,12 @@ interface Product {
 async function getProducts(limit: number = 20) {
   try {
     await connectDB();
-    
+
     const products = await Product.find({ isActive: true })
       .sort({ createdAt: -1 })
       .limit(limit)
       .lean();
-    
+
     return products;
   } catch (error) {
     console.error('Error fetching products:', error);
@@ -134,4 +140,4 @@ export default async function ProductsPage() {
       </section>
     </div>
   );
-} 
+}
